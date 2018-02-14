@@ -95,6 +95,7 @@ CHORD_TYPES = collections.OrderedDict([
     # other
     ('suspended-second',            ['1,2,5', ['sus2']]),                        # Y
     ('suspended-fourth',            ['1,4,5', ['sus', 'sus4']]),                 # Y
+	('seventh-suspended-fourth',    ['1,4,5,-7', ['7sus', '7sus4']]),            # Y
     ('Neapolitan',                  ['1,2-,3,5-', ['N6']]),                      # Y
     ('Italian',                     ['1,#4,-6', ['It+6', 'It']]),                # Y
     ('French',                      ['1,2,#4,-6', ['Fr+6', 'Fr']]),              # Y
@@ -775,6 +776,13 @@ def chordSymbolFigureFromChord(inChord, includeChordType=False):
     >>> c = chord.Chord(['B-3', 'D4', 'F-4', 'A-4'])
     >>> harmony.chordSymbolFigureFromChord(c, True)
     ('B-dom7dim5', 'seventh-flat-five')
+
+    The root has to be specified for 7sus4 chords
+    otherwise music21 analyses the root of the chord to be the fifth
+    >>> c = chord.Chord(['C3', 'F3', 'G3', 'B-3'])
+    >>> c.root('C3')
+    >>> harmony.chordSymbolFigureFromChord(c, True)
+    ('C7sus4', 'seventh-suspended-fourth')
 
     NINTHS
 
