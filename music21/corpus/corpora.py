@@ -10,9 +10,7 @@
 # License:      LGPL or BSD, see license.txt
 #------------------------------------------------------------------------------
 
-
 import abc
-import os
 import pathlib
 
 from music21 import common
@@ -80,7 +78,7 @@ class Corpus:
         rdp = common.cleanpath(rootDirectoryPath, returnPathlib=True)
         matched = []
 
-        for filename in rdp.rglob('*'):
+        for filename in sorted(rdp.rglob('*')):
             if filename.name.startswith('__'):
                 continue
             if filename.name.startswith('.'):
@@ -400,7 +398,7 @@ class Corpus:
 
         >>> from music21 import corpus
         >>> corpus.corpora.CoreCorpus().metadataBundle
-        <music21.metadata.bundles.MetadataBundle 'core': {150... entries}>
+        <music21.metadata.bundles.MetadataBundle 'core': {151... entries}>
 
         As a technical aside, the metadata bundle for a corpus is actually
         stored in corpus.manager, in order to cache most effectively over
@@ -420,7 +418,7 @@ class Corpus:
 
         >>> from music21 import corpus
         >>> corpus.corpora.CoreCorpus().all()
-        <music21.metadata.bundles.MetadataBundle 'core': {150... entries}>
+        <music21.metadata.bundles.MetadataBundle 'core': {151... entries}>
         '''
         return self.metadataBundle
 
@@ -517,6 +515,7 @@ class CoreCorpus(Corpus):
         ('essenFolksong', 'Essen Folksong Collection', False),
         ('handel', 'George Frideric Handel', True),
         ('haydn', 'Joseph Haydn', True),
+        ('joplin', 'Scott Joplin', True),
         ('josquin', 'Josquin des Prez', True),
         ('leadSheet', 'Leadsheet demos', False),
         ('luca', 'D. Luca', False),
@@ -629,8 +628,8 @@ class CoreCorpus(Corpus):
     def manualCoreCorpusPath(self, expr): # pragma: no cover
         userSettings = environment.UserSettings()
         if expr is not None:
-            path = common.cleanpath(expr)
-            if not os.path.isdir(path) or not os.path.exists(path):
+            path = common.cleanpath(expr, returnPathlib=True)
+            if not path.is_dir() or not path.exists():
                 raise CorpusException('path needs to be a path to an existing directory')
             userSettings['manualCoreCorpusPath'] = path
         else:
@@ -771,14 +770,14 @@ class LocalCorpus(Corpus):
         unless explicitly saved by a call to ``LocalCorpus.save()``.
         '''
         from music21 import corpus
-        if not isinstance(directoryPath, str):
+        if not isinstance(directoryPath, (str, pathlib.Path)):
             raise corpus.CorpusException(
                 'an invalid file path has been provided: {0!r}'.format(
                     directoryPath))
 
-        directoryPath = common.cleanpath(directoryPath)
-        if (not os.path.exists(directoryPath) or
-                not os.path.isdir(directoryPath)):
+        directoryPath = common.cleanpath(directoryPath, returnPathlib=True)
+        if (not directoryPath.exists() or
+                not directoryPath.is_dir()):
             raise corpus.CorpusException(
                 'an invalid file path has been provided: {0!r}'.format(
                     directoryPath))
@@ -797,8 +796,8 @@ class LocalCorpus(Corpus):
         elif not self.existsInSettings:
             return
 
-        if os.path.exists(self.metadataBundle.filePath):
-            os.remove(self.metadataBundle.filePath)
+        if self.metadataBundle.filePath.exists():
+            self.metadataBundle.filePath.unlink()
 
         userSettings = environment.UserSettings()
         del(userSettings['localCorporaSettings'][self.name])

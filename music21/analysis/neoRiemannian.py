@@ -180,7 +180,8 @@ def LRP_combinations(c,
     <music21.chord.Chord C4 F4 A-4 C5 F5>
 
     >>> c5 = chord.Chord("B4 D#5 F#5")
-    >>> c6 = analysis.neoRiemannian.LRP_combinations(c5, 'LPLPLP', leftOrdered=True, simplifyEnharmonics=True)
+    >>> c6 = analysis.neoRiemannian.LRP_combinations(c5, 
+    ...                        'LPLPLP', leftOrdered=True, simplifyEnharmonics=True)
     >>> c6
     <music21.chord.Chord B4 D#5 F#5>
     >>> c5 = chord.Chord("C4 E4 G4")
@@ -250,15 +251,16 @@ def completeHexatonic(c, simplifyEnharmonics=False, raiseException=True):
      <music21.chord.Chord C-4 F-4 A--4>,
      <music21.chord.Chord D--4 F-4 A--4>]
 
-     Or with  simplifyEnharmonics=True
-     >>> c2 = chord.Chord("C4 E4 G4")
-     >>> analysis.neoRiemannian.completeHexatonic(c2, simplifyEnharmonics=True)
-     [<music21.chord.Chord C4 E-4 G4>,
-      <music21.chord.Chord C4 E-4 A-4>,
-      <music21.chord.Chord B3 D#4 G#4>,
-      <music21.chord.Chord B3 E4 G#4>,
-      <music21.chord.Chord B3 E4 G4>,
-      <music21.chord.Chord C4 E4 G4>]
+    Or with  simplifyEnharmonics=True
+     
+    >>> c2 = chord.Chord("C4 E4 G4")
+    >>> analysis.neoRiemannian.completeHexatonic(c2, simplifyEnharmonics=True)
+    [<music21.chord.Chord C4 E-4 G4>,
+     <music21.chord.Chord C4 E-4 A-4>,
+     <music21.chord.Chord B3 D#4 G#4>,
+     <music21.chord.Chord B3 E4 G#4>,
+     <music21.chord.Chord B3 E4 G4>,
+     <music21.chord.Chord C4 E4 G4>]
     '''
     if c.isMajorTriad() or c.isMinorTriad():
         hexatonicList = []

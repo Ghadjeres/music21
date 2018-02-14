@@ -1296,7 +1296,7 @@ class Stream(core.StreamCoreMixin, base.Music21Object):
         # do not pop while iterating...
 
         for section in popDict:
-            sectionList = getattr(self, section) # _elements or _endElements
+            sectionList = getattr(self, section) # self._elements or self._endElements
             popList = popDict[section]
             for popIndex in reversed(popList):
                 removeElement = sectionList.pop(popIndex)
@@ -1318,7 +1318,6 @@ class Stream(core.StreamCoreMixin, base.Music21Object):
         Remove all elements from the Stream
         based on one or more classes given
         in a list.
-
 
         >>> s = stream.Stream()
         >>> s.append(meter.TimeSignature('4/4'))
@@ -1342,7 +1341,6 @@ class Stream(core.StreamCoreMixin, base.Music21Object):
         >>> s.removeByClass('Barline')
         >>> len(s)
         5
-
         '''
         elFilter = self.iter.getElementsByClass(classFilterList)
         return self._removeIteration(elFilter)
@@ -12577,8 +12575,10 @@ class Score(Stream):
         voiceAllocation = 2
         permitOneVoicePerPart = False
 
-        return self.partsToVoices(voiceAllocation=voiceAllocation,
-            permitOneVoicePerPart=permitOneVoicePerPart)
+        return self.partsToVoices(
+            voiceAllocation=voiceAllocation,
+            permitOneVoicePerPart=permitOneVoicePerPart
+            )
 
     def flattenParts(self, classFilterList=('Note', 'Chord')):
         '''
