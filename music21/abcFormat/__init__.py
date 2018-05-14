@@ -1924,7 +1924,7 @@ class ABCHandler:
                         '!diminuendo)!': ABCParenStop,
                         }
                 j = currentIndex + 1
-                while j < currentIndex + 20: #a reasonable upper bound
+                while j < currentIndex + 20 and j < lastIndex: #a reasonable upper bound
                     if strSrc[j] == "!":
                         if strSrc[currentIndex:j + 1] in exclaimDict:
                             exclaimClass = exclaimDict[strSrc[currentIndex:j + 1]]
