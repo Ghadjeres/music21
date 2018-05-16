@@ -36,6 +36,7 @@ from music21 import note
 from music21 import chord
 from music21 import spanner
 from music21 import harmony
+from music21 import pitch
 
 
 environLocal = environment.Environment('abcFormat.translate')
@@ -286,9 +287,22 @@ def parseTokens(mh, dst, p, useMeasures):
                 cs_name = re.sub('[()]', '', cs_name)
                 cs_name = re.sub('[()]', '', cs_name)
                 cs_name = re.sub('/.*', '', cs_name)
-                cs = harmony.ChordSymbol(cs_name)
-                dst.coreAppend(cs, setActiveSite=False)
-                dst.coreElementsChanged()
+                cs_name = cs_name.replace('b', '-')
+                cs_name = cs_name.replace('^', '#')
+                cs_name = cs_name.replace('alt', '7')
+                if cs_name in ['tr', 'slide']:
+                    continue
+                try:
+                    cs = harmony.ChordSymbol(cs_name)
+                    dst.coreAppend(cs, setActiveSite=False)
+                    dst.coreElementsChanged()
+                except (UnboundLocalError,
+                        ValueError,
+                        pitch.AccidentalException,
+                        pitch.PitchException,
+                        IndexError) as e:
+                    print(f'Parsing error in parseToken {t.chordSymbols[0]}:')
+                    print(e)
             if t.isRest:
                 n = note.Rest()
             else:
