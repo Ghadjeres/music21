@@ -1549,6 +1549,7 @@ class ABCNote(ABCToken):
                                "{0}, assuming C".format(nonChordSymStr)])
             pn = "C"
             accDisp = False
+            raise ABCHandlerException
 
         self.pitchName, self.accidentalDisplayStatus = pn, accDisp
 
