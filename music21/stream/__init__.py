@@ -242,7 +242,7 @@ class Stream(core.StreamCoreMixin, base.Music21Object):
             else:
                 return '<%s.%s 0x%x>' % (self.__module__, self.__class__.__name__, self.id)
         else:
-            return super().__repr__(self)
+            return super().__repr__()
 
     def write(self, *args, **kwargs):
         #...    --- see base.py calls .write(
@@ -4135,7 +4135,7 @@ class Stream(core.StreamCoreMixin, base.Music21Object):
             start, end = k
             focus = returnObj.getElementsByOffset(start, end,
                 includeEndBoundary=False, mustFinishInSpan=False,
-                mustBeginInSpan=True)
+                mustBeginInSpan=True).stream()
             trans = i.transposition
             if reverse:
                 trans = trans.reverse()
@@ -7443,7 +7443,7 @@ class Stream(core.StreamCoreMixin, base.Music21Object):
         where each dictionary defines the real-time characteristics of
         the stored events. This will attempt to find
         all :class:`~music21.tempo.TempoIndication` subclasses and use these
-        values to realize tempi. If not initial tempo is found,
+        values to realize tempi. If no initial tempo is found,
         a tempo of 120 BPM will be provided.
         '''
         if srcObj is None:
@@ -9103,36 +9103,29 @@ class Stream(core.StreamCoreMixin, base.Music21Object):
             flatStream = flatStream.sorted
         # these may not be sorted
         durSpanSorted = self._getDurSpan(flatStream)
+        # According to the above comment, the spans may not be sorted
+        # so we sort them to be sure, but keep track of their original indices
+        durSpanSortedIndex = [(v, i) for v, i in enumerate(durSpanSorted)]
+        durSpanSortedIndex.sort()
 
         # create a list with an entry for each element
         # in each entry, provide indices of all other elements that overalap
         overlapMap = [[] for dummy in range(len(durSpanSorted))]
 
-        durSpanOverlapCache = {}
+        for i in range(len(durSpanSortedIndex)):
+            src = durSpanSortedIndex[i]
+            for j in range(i+1, len(durSpanSortedIndex)):
+                dst = durSpanSortedIndex[j]
+                if self._durSpanOverlap(src[1], dst[1]):
+                    overlapMap[src[0]].append(dst[0])
+                    overlapMap[dst[0]].append(src[0])
+                else:
+                    break
 
-        for i in range(len(durSpanSorted)):
-            src = durSpanSorted[i]
-            # second entry is duration
-            # compare to all past and following durations
-            for j in range(len(durSpanSorted)):
-                if j == i: # index numbers
-                    continue # do not compare to self
-                dst = durSpanSorted[j]
-                # print(src, dst, self._durSpanOverlap(src, dst, includeEndBoundary))
-
-                # the current fractions.Fraction.__hash__ is EXTREMELY SLOW! so we
-                # construct our own hash key.  If we miss (as with '0.0' vs '0') it is not
-                # a big deal, since it's just a speedup
-                hashKey = str(src[0]) + ',' + str(src[1]) + ':' + str(dst[0]) + ',' + str(dst[1])
-
-                try:
-                    if durSpanOverlapCache[hashKey]:
-                        overlapMap[i].append(j)
-                except KeyError:
-                    durSpanResult = self._durSpanOverlap(src, dst)
-                    durSpanOverlapCache[hashKey] = durSpanResult
-                    if durSpanResult:
-                        overlapMap[i].append(j)
+        # Preserve exact same behaviour as earlier code.
+        # It is unclear if anything depends on the individual lists being sorted.
+        for ls in overlapMap:
+            ls.sort()
         return overlapMap
 
 
@@ -9231,12 +9224,16 @@ class Stream(core.StreamCoreMixin, base.Music21Object):
                 gapQuarterLength = opFrac(e.offset - highestCurrentEndTime)
                 gapElement.duration = duration.Duration()
                 gapElement.duration.quarterLength = gapQuarterLength
-                gapStream.insert(highestCurrentEndTime, gapElement)
+                gapStream.insert(highestCurrentEndTime, gapElement, ignoreSort=True)
             if hasattr(e, 'duration') and e.duration is not None:
                 eDur = e.duration.quarterLength
             else:
                 eDur = 0.
             highestCurrentEndTime = opFrac(max(highestCurrentEndTime, e.offset + eDur))
+
+        # TODO: Is this even neccessary, we do insert the elements in sorted order
+        # and the stream is empty at the start
+        gapStream.sort()
 
         if not gapStream:
             return None
