@@ -1231,10 +1231,10 @@ def chordSymbolFigureFromChord(inChord, includeChordType=False):
         ## new algorithm makes sus chord be a sus2 in inversion:
         if inChord.inversion():
             if kindStr == 'sus2':
-                inChord.root(inChord.bass())
-                kindStr = 'sus'
-                kind = 'suspended-fourth'
-                cs = inChord.root().name + kindStr
+                # inChord.root(inChord.bass())
+                # kindStr = 'sus'
+                # kind = 'suspended-fourth'
+                # cs = inChord.root().name + kindStr
                 # should never be used
                 raise NotImplementedError
             else:
@@ -1290,6 +1290,8 @@ def chordSymbolFromChord(inChord):
     '''
     cs = ChordSymbol(chordSymbolFigureFromChord(inChord))
     cs.pitches = inChord.pitches
+    if 'root' in inChord._overrides:
+        cs.root(inChord.root())
     return cs
 
 
