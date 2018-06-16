@@ -17,6 +17,7 @@ roman numerals, or other chord representations with a defined root.
 import collections
 import re
 import unittest
+import copy
 
 from music21 import chord
 from music21 import common
@@ -56,10 +57,12 @@ CHORD_TYPES = collections.OrderedDict([
     ('dominant-seventh', ['1,3,5,-7', ['7', 'dom7', ]]),  # Y: 'dominant'
     ('major-seventh', ['1,3,5,7', ['maj7', 'M7']]),  # Y
     ('minor-major-seventh', ['1,-3,5,7', ['mM7', 'm#7', 'minmaj7']]),  # Y: 'major-minor'
+    # ('major-minor', ['1,-3,5,7', ['mM7', 'm#7', 'minmaj7']]), # Y: 'major-minor'
     ('minor-seventh', ['1,-3,5,-7', ['m7', 'min7']]),  # Y
     ('augmented-major seventh', ['1,3,#5,7', ['+M7', 'augmaj7']]),  # N
     ('augmented-seventh', ['1,3,#5,-7', ['7+', '+7', 'aug7']]),  # Y
     ('half-diminished-seventh', ['1,-3,-5,-7', ['/o7', 'm7b5']]),  # Y: 'half-diminished'
+    # ('half-diminished', ['1,-3,-5,-7', ['/o7', 'm7b5']]),  # Y: 'half-diminished'
     ('diminished-seventh', ['1,-3,-5,--7', ['o7', 'dim7']]),  # Y
     ('seventh-flat-five', ['1,3,-5,-7', ['dom7dim5']]),  # N
     # sixths
@@ -96,8 +99,8 @@ CHORD_TYPES = collections.OrderedDict([
     # other
     ('suspended-second', ['1,2,5', ['sus2']]),  # Y
     ('suspended-fourth', ['1,4,5', ['sus', 'sus4']]),  # Y
-    # ('seventh-suspended-fourth',    ['1,4,5,-7', ['7sus', '7sus4']]),            # Y
-    # ('ninth-suspended-fourth',      ['1,4,5,-7,9', ['9sus', '9sus4']]),          # Y
+    ('seventh-suspended-fourth',    ['1,4,5,-7', ['7sus', '7sus4']]),            # Y
+    ('ninth-suspended-fourth',      ['1,4,5,-7,9', ['9sus', '9sus4']]),          # Y
     ('Neapolitan', ['1,2-,3,5-', ['N6']]),  # Y
     ('Italian', ['1,#4,-6', ['It+6', 'It']]),  # Y
     ('French', ['1,2,#4,-6', ['Fr+6', 'Fr']]),  # Y
@@ -1259,7 +1262,8 @@ def chordSymbolFigureFromChord(inChord, includeChordType=False):
                     interval_addition_str = {
                         'm7': '7',
                         'A2': '#9',
-                        'm2': 'b9'
+                        'm2': 'b9',
+                        # 'M7': 'M7' # not sure
                     }
                     addition_str = interval_addition_str[interval_from_root]
                     cs += (addition_str + ',')
@@ -1847,6 +1851,9 @@ class ChordSymbol(Harmony):
             if degree_and_alt[0] == '#':
                 alt = 1
                 degree = degree_and_alt[1:]
+            # elif degree_and_alt[0] == 'M': # todo to remove?!
+            #     alt = 1
+            #     degree = degree_and_alt[1:]
             elif degree_and_alt[0] == 'b':
                 alt = -1
                 degree = degree_and_alt[1:]
@@ -2241,19 +2248,30 @@ class ChordSymbol(Harmony):
             return False
         
     def transpose(self, value, *, inPlace=False):
-        assert not inPlace
         # inconsistant transpositions otherwise
         assert isinstance(value, interval.Interval)
+
+        # problems with inPlace=True
         root = self.root()
         transposed_chord = super(ChordSymbol, self).transpose(
             value=value,
-                                               inPlace=inPlace)
+            inPlace=False)
+
         transposed_chord = chord.Chord(transposed_chord.pitches)
         transposed_chord.root(root.transpose(value))
-
         transposed_chord_symbol = chordSymbolFromChord(
             transposed_chord)
-        return transposed_chord_symbol
+
+        if inPlace:
+            super(ChordSymbol, self).transpose(
+                value=value,
+                inPlace=True)
+            self.root(transposed_chord_symbol.root())
+            self.bass(transposed_chord_symbol.root())
+            self._figure = transposed_chord_symbol.figure
+            self.figure = transposed_chord_symbol.figure
+        else:
+            return transposed_chord_symbol
 
 
         
